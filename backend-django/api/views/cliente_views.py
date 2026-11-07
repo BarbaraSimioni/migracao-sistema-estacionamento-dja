@@ -89,6 +89,9 @@ def detalhe_cliente(request, id):
         cliente.save()
         return JsonResponse(cliente_to_dict(cliente))
 
+    if cliente.veiculo_set.exists():
+        return erro('Não é possível excluir cliente com veículos cadastrados', 409)
+
     try:
         cliente.delete()
     except ProtectedError:
