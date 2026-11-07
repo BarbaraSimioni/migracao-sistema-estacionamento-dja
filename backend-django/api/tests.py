@@ -1,7 +1,20 @@
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
+
+from api.models import Vaga
 
 
 class ApiSkeletonTests(SimpleTestCase):
+    def assert_cors_headers(self, response):
+        self.assertEqual(response['Access-Control-Allow-Origin'], '*')
+        self.assertEqual(
+            response['Access-Control-Allow-Methods'],
+            'GET, POST, PUT, DELETE, OPTIONS',
+        )
+        self.assertEqual(
+            response['Access-Control-Allow-Headers'],
+            'Content-Type, Authorization',
+        )
+
     def test_unimplemented_collection_views_return_501(self):
         endpoints = (
             '/api/veiculos',
@@ -71,3 +84,36 @@ class ApiSkeletonTests(SimpleTestCase):
             registrar_entrada(1, 1)
         with self.assertRaises(NotImplementedError):
             registrar_saida(1)
+
+    def test_options_returns_204_for_any_url_with_cors_headers(self):
+        response = self.client.options('/api/rota-inexistente')
+
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.content, b'')
+        self.assert_cors_headers(response)
+
+    def test_cors_headers_are_added_to_normal_responses(self):
+        response = self.client.get('/api/dashboard')
+
+        self.assertEqual(response.status_code, 501)
+        self.assert_cors_headers(response)
+
+    def test_cors_headers_are_added_to_error_responses(self):
+        response = self.client.get('/api/rota-inexistente')
+
+        self.assertEqual(response.status_code, 404)
+        self.assert_cors_headers(response)
+
+
+class InitialParkingSpacesTests(TestCase):
+    def test_migration_creates_the_15_initial_parking_spaces(self):
+        spaces = list(
+            Vaga.objects.order_by('numero').values_list('numero', 'tipo', 'status')
+        )
+        expected = [
+            (f'A{number:02d}', 'CARRO', 'LIVRE') for number in range(1, 11)
+        ] + [
+            (f'B{number:02d}', 'MOTO', 'LIVRE') for number in range(1, 6)
+        ]
+
+        self.assertEqual(spaces, expected)
