@@ -45,6 +45,18 @@ def _erro_service(erro, status):
     return JsonResponse({'error': str(erro)}, status=status)
 
 
+def _id_positivo(valor):
+    if isinstance(valor, bool):
+        return None
+    if isinstance(valor, float) and not valor.is_integer():
+        return None
+    try:
+        identificador = int(valor)
+    except (TypeError, ValueError):
+        return None
+    return identificador if identificador > 0 else None
+
+
 def lista_permanencias(request):
     if request.method != 'GET':
         return _metodo_nao_permitido()
@@ -85,6 +97,19 @@ def entrada(request):
     ):
         return JsonResponse(
             {'error': "Campos 'veiculoId' e 'vagaId' são obrigatórios"},
+            status=400,
+        )
+
+    veiculo_id = _id_positivo(veiculo_id)
+    vaga_id = _id_positivo(vaga_id)
+    if veiculo_id is None or vaga_id is None:
+        return JsonResponse(
+            {
+                'error': (
+                    "Campos 'veiculoId' e 'vagaId' devem ser números "
+                    "inteiros positivos"
+                )
+            },
             status=400,
         )
 

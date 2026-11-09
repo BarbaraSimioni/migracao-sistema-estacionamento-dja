@@ -13,8 +13,7 @@ class NaoEncontrado(ValueError):
 
 
 def _calcular_valor(entrada, saida):
-    minutos = int((saida - entrada).total_seconds() // 60)
-    horas = math.ceil(minutos / 60)
+    horas = math.ceil((saida - entrada).total_seconds() / 3600)
     if horas < 1:
         horas = 1
     return TARIFA_POR_HORA * horas

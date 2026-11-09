@@ -86,9 +86,9 @@ def detalhe_vaga(request, id):
         if Vaga.objects.filter(numero=dados['numero']).exclude(id=id).exists():
             return erro('Número de vaga já cadastrado', 409)
 
-        status = dados.get('status')
+        status = dados.get('status', vaga.status)
         if status not in STATUSES:
-            status = 'LIVRE'  # mesmo comportamento do legado
+            return erro("Campo 'status' deve ser LIVRE ou OCUPADA", 400)
 
         vaga.numero = dados['numero']
         vaga.tipo = dados['tipo']
